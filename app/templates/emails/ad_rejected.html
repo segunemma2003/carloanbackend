@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your Ad Was Not Approved</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Your Ad Needs Review</h2>
+        
+        <p>Hello {{ user_name }},</p>
+        
+        <p>Unfortunately, your ad <strong>{{ ad_title }}</strong> was not approved for the following reason:</p>
+        
+        <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            {{ rejection_reason }}
+        </div>
+        
+        <p>Please review the reason above and make any necessary corrections.</p>
+        
+        <p><strong>Next steps:</strong></p>
+        <ol>
+            <li>Edit your ad to address the issue</li>
+            <li>Resubmit it for review</li>
+            <li>We'll review it again and get back to you</li>
+        </ol>
+        
+        <p>If you have questions, please contact our support team.</p>
+    </div>
+</body>
+</html>

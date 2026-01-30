@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your Ad Was Approved</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Great news! Your ad has been approved! </h2>
+        
+        <p>Hello {{ user_name }},</p>
+        
+        <p>Your ad <strong>{{ ad_title }}</strong> has been approved and is now live on AVTO LAIF!</p>
+        
+        <p>Your listing is now visible to potential buyers and can receive inquiries.</p>
+        
+        <p>
+            <a href="{{ ad_url }}" style="display: inline-block; background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px;">
+                View Your Ad
+            </a>
+        </p>
+        
+        <p>Tips for success:</p>
+        <ul>
+            <li>Respond quickly to buyer inquiries</li>
+            <li>Provide accurate information</li>
+            <li>Share high-quality photos</li>
+            <li>Use Featured or Top placement for more visibility</li>
+        </ul>
+    </div>
+</body>
+</html>

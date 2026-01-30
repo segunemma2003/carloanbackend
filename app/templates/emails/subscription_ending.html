@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Subscription Ending Soon</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Your {{ feature_type }} subscription is ending soon</h2>
+        
+        <p>Hello {{ user_name }},</p>
+        
+        <p>Your {{ feature_type }} boost for <strong>{{ ad_title }}</strong> will expire soon.</p>
+        
+        <p>To keep your ad boosted and maintain higher visibility, consider renewing your subscription:</p>
+        
+        <p>
+            <a href="{{ renewal_url }}" style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px;">
+                Renew Subscription
+            </a>
+        </p>
+        
+        <p>Your ad will continue to be visible after the boost expires, but it will appear in regular search results.</p>
+    </div>
+</body>
+</html>
