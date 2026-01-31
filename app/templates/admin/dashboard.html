@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MillionAvto Admin</title>
+    <link rel="stylesheet" href="/static/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn-refresh" onclick="loadStats()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <a href="/admin" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Admin
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Loading statistics...</p>
+        </div>
+
+        <!-- Main Content -->
+        <main class="dashboard-content" id="dashboardContent" style="display: none;">
+            <!-- Stats Cards Row 1 -->
+            <div class="stats-grid">
+                <!-- Users Card -->
+                <div class="stat-card card-users">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total Users</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-positive">
+                                <i class="fas fa-arrow-up"></i> <span id="newUsersWeek">0</span> this week
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Users Card -->
+                <div class="stat-card card-active-users">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Active Users</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-positive">
+                                <i class="fas fa-check-circle"></i> Active
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dealers Card -->
+                <div class="stat-card card-dealers">
+                    <div class="stat-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Dealers</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-info">
+                                <i class="fas fa-building"></i> Business accounts
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Ads Card -->
+                <div class="stat-card card-ads">
+                    <div class="stat-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total Ads</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-positive">
+                                <i class="fas fa-arrow-up"></i> <span id="newAdsWeek">0</span> this week
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards Row 2 -->
+            <div class="stats-grid">
+                <!-- Active Ads Card -->
+                <div class="stat-card card-active-ads">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Active Ads</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-positive">
+                                <i class="fas fa-eye"></i> Live listings
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Ads Card -->
+                <div class="stat-card card-pending">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Pending Ads</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-warning">
+                                <i class="fas fa-hourglass-half"></i> Awaiting moderation
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Card -->
+                <div class="stat-card card-messages">
+                    <div class="stat-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total Messages</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-info">
+                                <i class="fas fa-inbox"></i> <span id="totalDialogs">0</span> dialogs
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Card -->
+                <div class="stat-card card-reports">
+                    <div class="stat-icon">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Reports</h3>
+                        <div class="stat-value" data-target="0">0</div>
+                        <div class="stat-change">
+                            <span class="change-warning">
+                                <i class="fas fa-exclamation-triangle"></i> <span id="pendingReports">0</span> pending
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Details Row -->
+            <div class="details-grid">
+                <!-- Recent Activity -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-bolt"></i> Recent Activity (24h)</h3>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <i class="fas fa-user-plus"></i>
+                            <span><strong id="recentUsers">0</strong> new users</span>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-car"></i>
+                            <span><strong id="recentAds">0</strong> new ads</span>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-comment"></i>
+                            <span><strong id="recentMessages">0</strong> new messages</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ad Status Breakdown -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-chart-pie"></i> Ad Status Breakdown</h3>
+                    <div class="status-breakdown">
+                        <div class="status-item">
+                            <span class="status-dot status-active"></span>
+                            <span>Active: <strong id="statusActive">0</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot status-pending"></span>
+                            <span>Pending: <strong id="statusPending">0</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot status-draft"></span>
+                            <span>Draft: <strong id="statusDraft">0</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot status-rejected"></span>
+                            <span>Rejected: <strong id="statusRejected">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Role Breakdown -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-users-cog"></i> Users by Role</h3>
+                    <div class="role-breakdown">
+                        <div class="role-item">
+                            <i class="fas fa-user"></i>
+                            <span>Users: <strong id="roleUser">0</strong></span>
+                        </div>
+                        <div class="role-item">
+                            <i class="fas fa-store"></i>
+                            <span>Dealers: <strong id="roleDealer">0</strong></span>
+                        </div>
+                        <div class="role-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Moderators: <strong id="roleModerator">0</strong></span>
+                        </div>
+                        <div class="role-item">
+                            <i class="fas fa-crown"></i>
+                            <span>Admins: <strong id="roleAdmin">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactions -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-heart"></i> User Interactions</h3>
+                    <div class="interaction-list">
+                        <div class="interaction-item">
+                            <i class="fas fa-star"></i>
+                            <span>Favorites: <strong id="totalFavorites">0</strong></span>
+                        </div>
+                        <div class="interaction-item">
+                            <i class="fas fa-balance-scale"></i>
+                            <span>Comparisons: <strong id="totalComparisons">0</strong></span>
+                        </div>
+                        <div class="interaction-item">
+                            <i class="fas fa-eye"></i>
+                            <span>Views: <strong id="totalViews">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/admin-dashboard.js"></script>
+</body>
+</html>
+

@@ -61,6 +61,42 @@ async def get_active_banners(
     )
 
 
+@router.get("/{banner_id}", response_model=BannerResponse)
+async def get_banner(
+    banner_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> BannerResponse:
+    """
+    Get banner details by ID (public endpoint).
+    Returns banner if it's active and within date range.
+    """
+    now = datetime.now(timezone.utc)
+    
+    result = await db.execute(
+        select(Banner).where(
+            Banner.id == banner_id,
+            Banner.status == BannerStatus.ACTIVE,
+            or_(
+                Banner.start_date.is_(None),
+                Banner.start_date <= now
+            ),
+            or_(
+                Banner.end_date.is_(None),
+                Banner.end_date >= now
+            )
+        )
+    )
+    banner = result.scalar_one_or_none()
+    
+    if not banner:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Banner not found or not active"
+        )
+    
+    return BannerResponse.model_validate(banner)
+
+
 @router.post("/{banner_id}/impression", status_code=status.HTTP_204_NO_CONTENT)
 async def track_impression(
     banner_id: int,

@@ -8,8 +8,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -87,12 +88,23 @@ from app.middleware.admin_custom import AdminCustomMiddleware
 app.add_middleware(AdminCustomMiddleware)
 
 # Mount static files FIRST (before admin panel)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Use absolute path to ensure static files are found
+from pathlib import Path
+import os
+
+# Get the project root directory (where this file is located)
+# Use resolve() to get absolute path
+BASE_DIR = Path(__file__).resolve().parent.parent  # Go up from app/ to project root
+STATIC_DIR = BASE_DIR / "app" / "static"
+
+# Create static directory if it doesn't exist
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+
+# Mount static files with absolute path
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR.absolute())), name="static")
 
 # Create uploads directory
-import os
-from pathlib import Path
-upload_dir = Path("app/static/uploads")
+upload_dir = STATIC_DIR / "uploads"
 upload_dir.mkdir(parents=True, exist_ok=True)
 
 # Initialize Admin Panel (after static files are mounted)
@@ -161,6 +173,23 @@ async def test_logo():
     if logo_path.exists():
         return FileResponse(logo_path)
     return {"error": "Logo not found"}
+
+
+# Admin Dashboard endpoint
+@app.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard(request: Request):
+    """Serve the admin dashboard page."""
+    dashboard_path = STATIC_DIR.parent / "templates" / "admin" / "dashboard.html"
+    
+    if dashboard_path.exists():
+        with open(dashboard_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    else:
+        return HTMLResponse(
+            content="<h1>Dashboard not found</h1>",
+            status_code=404
+        )
+
 
 # Root endpoint
 @app.get("/")

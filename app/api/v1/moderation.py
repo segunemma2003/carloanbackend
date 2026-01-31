@@ -172,6 +172,88 @@ async def report_message(
     return MessageOut(message="Report submitted successfully")
 
 
+# ============ User Reports (Users can view their own reports) ============
+
+@router.get("/reports/my", response_model=dict)
+async def get_my_reports(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get current user's reports.
+    Users can view their own submitted reports.
+    """
+    query = select(Report).where(Report.reporter_id == current_user.id)
+
+    # Count total
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+
+    # Paginate
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size).order_by(Report.created_at.desc())
+
+    result = await db.execute(query)
+    reports = result.scalars().all()
+
+    return {
+        "items": [
+            {
+                "id": r.id,
+                "report_type": r.report_type.value,
+                "target_id": r.target_id,
+                "reason": r.reason.value,
+                "description": r.description,
+                "status": r.status.value,
+                "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None,
+                "resolution_note": r.resolution_note,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in reports
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+@router.get("/reports/my/{report_id}", response_model=dict)
+async def get_my_report(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get details of a specific report submitted by current user.
+    """
+    result = await db.execute(
+        select(Report).where(
+            Report.id == report_id,
+            Report.reporter_id == current_user.id
+        )
+    )
+    report = result.scalar_one_or_none()
+
+    if not report:
+        raise NotFoundError("Report not found", "report", report_id)
+
+    return {
+        "id": report.id,
+        "report_type": report.report_type.value,
+        "target_id": report.target_id,
+        "reason": report.reason.value,
+        "description": report.description,
+        "status": report.status.value,
+        "resolved_by": report.resolved_by,
+        "resolved_at": report.resolved_at.isoformat() if report.resolved_at else None,
+        "resolution_note": report.resolution_note,
+        "created_at": report.created_at.isoformat(),
+    }
+
+
 # ============ Moderation (Moderators Only) ============
 
 @router.get("/reports", response_model=dict)

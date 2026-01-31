@@ -4,7 +4,7 @@ API v1 routes.
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, users, ads, categories, vehicles, locations, chat, favorites, moderation, banners, uploads
+from app.api.v1 import auth, users, ads, categories, vehicles, locations, chat, favorites, moderation, banners, uploads, admin_dashboard
 
 api_router = APIRouter()
 
@@ -19,4 +19,5 @@ api_router.include_router(favorites.router, prefix="/favorites", tags=["Favorite
 api_router.include_router(moderation.router, prefix="/moderation", tags=["Moderation"])
 api_router.include_router(banners.router, prefix="/banners", tags=["Banners"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(admin_dashboard.router, prefix="/admin", tags=["Admin Dashboard"])
 
