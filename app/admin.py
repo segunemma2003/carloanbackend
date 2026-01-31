@@ -6,7 +6,7 @@ Beautiful admin interface for managing all application data.
 from sqladmin import Admin, ModelView
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, HTMLResponse
 
 from app.core.database import engine
 from app.core.security import verify_password
@@ -22,6 +22,12 @@ from app.models.chat import Dialog, Message
 from app.models.favorites import Favorite, Comparison, ViewHistory
 from app.models.moderation import Report, ModerationLog
 from app.models.banner import Banner
+from app.admin_views import (
+    add_user_labels, add_session_labels, add_category_labels,
+    add_vehicle_labels, add_location_labels, add_ad_labels,
+    add_ad_media_labels, add_chat_labels, add_moderation_labels,
+    add_banner_labels
+)
 
 
 class AdminAuth(AuthenticationBackend):
@@ -68,13 +74,20 @@ class AdminAuth(AuthenticationBackend):
             print(f"[ADMIN LOGIN] Role check passed, storing session")
             
             # Store user info in session
-            request.session.update({
-                "user_id": user.id,
-                "user_email": user.email,
-                "user_name": user.name
-            })
+            # SQLAdmin uses a specific session key format
+            request.session["user_id"] = user.id
+            request.session["user_email"] = user.email
+            request.session["user_name"] = user.name
             
+            # Force session save by accessing it
+            # Starlette's SessionMiddleware automatically saves when modified
+            session_keys = list(request.session.keys())
+            print(f"[ADMIN LOGIN] Session stored: user_id={user.id}")
+            print(f"[ADMIN LOGIN] Session keys: {session_keys}")
+            print(f"[ADMIN LOGIN] Session cookie name: avto_laif_session")
             print(f"[ADMIN LOGIN] Login successful for {email}")
+            
+            # Return True - SQLAdmin will handle the redirect
             return True
     
     async def logout(self, request: Request) -> bool:
@@ -85,7 +98,44 @@ class AdminAuth(AuthenticationBackend):
     async def authenticate(self, request: Request) -> bool:
         """Check if user is authenticated."""
         user_id = request.session.get("user_id")
-        return user_id is not None
+        
+        if not user_id:
+            print(f"[ADMIN AUTH] No user_id in session. Session keys: {list(request.session.keys())}")
+            return False
+        
+        # Verify user still exists and is admin
+        from sqlalchemy import select
+        from app.core.database import async_session_maker
+        
+        try:
+            async with async_session_maker() as session:
+                result = await session.execute(
+                    select(User).where(User.id == user_id)
+                )
+                user = result.scalar_one_or_none()
+                
+                if not user:
+                    print(f"[ADMIN AUTH] User {user_id} not found in database")
+                    request.session.clear()
+                    return False
+                
+                if user.role != UserRole.ADMIN:
+                    print(f"[ADMIN AUTH] User {user_id} is not ADMIN (role: {user.role})")
+                    request.session.clear()
+                    return False
+                
+                if not user.is_active:
+                    print(f"[ADMIN AUTH] User {user_id} is not active")
+                    request.session.clear()
+                    return False
+                
+                print(f"[ADMIN AUTH] Authentication successful for user {user_id}")
+                return True
+        except Exception as e:
+            print(f"[ADMIN AUTH] Error during authentication: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
 
 # ============ User Management ============
@@ -131,18 +181,12 @@ class UserAdmin(ModelView, model=User):
     can_delete = True
     can_view_details = True
     
-    # Labels
-    column_labels = {
-        User.email: "Email",
-        User.name: "Name",
-        User.phone: "Phone",
-        User.role: "Role",
-        User.account_type: "Account Type",
-        User.email_verified: "Email Verified",
-        User.phone_verified: "Phone Verified",
-        User.is_active: "Active",
-        User.created_at: "Created At",
-    }
+    # Labels - will be set after class definition
+    pass
+
+
+# Apply labels after class definition
+add_user_labels(UserAdmin)
 
 
 class UserSessionAdmin(ModelView, model=UserSession):
@@ -163,6 +207,10 @@ class UserSessionAdmin(ModelView, model=UserSession):
     can_create = False
     can_edit = False
     can_delete = True
+
+
+# Apply labels
+add_session_labels(UserSessionAdmin)
 
 
 # ============ Categories ============
@@ -201,6 +249,10 @@ class CategoryAdmin(ModelView, model=Category):
     can_delete = True
 
 
+# Apply labels
+add_category_labels(CategoryAdmin)
+
+
 # ============ Vehicle References ============
 
 class VehicleTypeAdmin(ModelView, model=VehicleType):
@@ -219,6 +271,10 @@ class VehicleTypeAdmin(ModelView, model=VehicleType):
     can_create = True
     can_edit = True
     can_delete = True
+
+
+# Apply labels
+add_vehicle_labels(VehicleTypeAdmin, VehicleType)
 
 
 class BrandAdmin(ModelView, model=Brand):
@@ -254,11 +310,15 @@ class BrandAdmin(ModelView, model=Brand):
     can_delete = True
 
 
+# Apply labels
+add_vehicle_labels(BrandAdmin, Brand)
+
+
 class ModelAdmin(ModelView, model=Model):
     """Admin view for models."""
     
-    name = "Model"
-    name_plural = "Models"
+    name = "Car Model"
+    name_plural = "Car Models"
     icon = "fa-solid fa-car-side"
     
     column_list = [
@@ -287,11 +347,15 @@ class ModelAdmin(ModelView, model=Model):
     can_delete = True
 
 
+# Apply labels
+add_vehicle_labels(ModelAdmin, Model)
+
+
 class GenerationAdmin(ModelView, model=Generation):
     """Admin view for generations."""
     
-    name = "Generation"
-    name_plural = "Generations"
+    name = "Model Generation"
+    name_plural = "Model Generations"
     icon = "fa-solid fa-timeline"
     
     column_list = [
@@ -320,11 +384,15 @@ class GenerationAdmin(ModelView, model=Generation):
     can_delete = True
 
 
+# Apply labels
+add_vehicle_labels(GenerationAdmin, Generation)
+
+
 class ModificationAdmin(ModelView, model=Modification):
     """Admin view for modifications."""
     
-    name = "Modification"
-    name_plural = "Modifications"
+    name = "Car Modification"
+    name_plural = "Car Modifications"
     icon = "fa-solid fa-gears"
     
     column_list = [
@@ -367,11 +435,15 @@ class ModificationAdmin(ModelView, model=Modification):
     can_delete = True
 
 
+# Apply labels
+add_vehicle_labels(ModificationAdmin, Modification)
+
+
 class BodyTypeAdmin(ModelView, model=BodyType):
     """Admin view for body types."""
     
-    name = "Body Type"
-    name_plural = "Body Types"
+    name = "Vehicle Body Type"
+    name_plural = "Vehicle Body Types"
     icon = "fa-solid fa-car"
     
     column_list = [BodyType.id, BodyType.name, BodyType.slug, BodyType.is_active, BodyType.sort_order]
@@ -382,11 +454,15 @@ class BodyTypeAdmin(ModelView, model=BodyType):
     can_delete = True
 
 
+# Apply labels
+add_vehicle_labels(BodyTypeAdmin, BodyType)
+
+
 class TransmissionAdmin(ModelView, model=Transmission):
     """Admin view for transmissions."""
     
-    name = "Transmission"
-    name_plural = "Transmissions"
+    name = "Transmission Type"
+    name_plural = "Transmission Types"
     icon = "fa-solid fa-gears"
     
     column_list = [Transmission.id, Transmission.name, Transmission.short_name, Transmission.is_active]
@@ -394,6 +470,10 @@ class TransmissionAdmin(ModelView, model=Transmission):
     can_create = True
     can_edit = True
     can_delete = True
+
+
+# Apply labels
+add_vehicle_labels(TransmissionAdmin, Transmission)
 
 
 class FuelTypeAdmin(ModelView, model=FuelType):
@@ -408,6 +488,10 @@ class FuelTypeAdmin(ModelView, model=FuelType):
     can_create = True
     can_edit = True
     can_delete = True
+
+
+# Apply labels
+add_vehicle_labels(FuelTypeAdmin, FuelType)
 
 
 class DriveTypeAdmin(ModelView, model=DriveType):
@@ -427,8 +511,8 @@ class DriveTypeAdmin(ModelView, model=DriveType):
 class ColorAdmin(ModelView, model=Color):
     """Admin view for colors."""
     
-    name = "Color"
-    name_plural = "Colors"
+    name = "Vehicle Color"
+    name_plural = "Vehicle Colors"
     icon = "fa-solid fa-palette"
     
     column_list = [Color.id, Color.name, Color.slug, Color.hex_code, Color.is_active]
@@ -437,6 +521,11 @@ class ColorAdmin(ModelView, model=Color):
     can_create = True
     can_edit = True
     can_delete = True
+
+
+# Apply labels
+add_vehicle_labels(DriveTypeAdmin, DriveType)
+add_vehicle_labels(ColorAdmin, Color)
 
 
 # ============ Locations ============
@@ -456,6 +545,10 @@ class CountryAdmin(ModelView, model=Country):
     can_delete = True
 
 
+# Apply labels
+add_location_labels(CountryAdmin, Country)
+
+
 class RegionAdmin(ModelView, model=Region):
     """Admin view for regions."""
     
@@ -470,6 +563,10 @@ class RegionAdmin(ModelView, model=Region):
     can_create = True
     can_edit = True
     can_delete = True
+
+
+# Apply labels
+add_location_labels(RegionAdmin, Region)
 
 
 class CityAdmin(ModelView, model=City):
@@ -491,13 +588,17 @@ class CityAdmin(ModelView, model=City):
     can_delete = True
 
 
+# Apply labels
+add_location_labels(CityAdmin, City)
+
+
 # ============ Advertisements ============
 
 class AdAdmin(ModelView, model=Ad):
     """Admin view for ads."""
     
-    name = "Advertisement"
-    name_plural = "Advertisements"
+    name = "Car Listing"
+    name_plural = "Car Listings"
     icon = "fa-solid fa-rectangle-ad"
     
     column_list = [
@@ -522,11 +623,15 @@ class AdAdmin(ModelView, model=Ad):
     can_view_details = True
 
 
+# Apply labels
+add_ad_labels(AdAdmin)
+
+
 class AdImageAdmin(ModelView, model=AdImage):
     """Admin view for ad images."""
     
-    name = "Ad Image"
-    name_plural = "Ad Images"
+    name = "Listing Image"
+    name_plural = "Listing Images"
     icon = "fa-solid fa-image"
     
     column_list = [AdImage.id, AdImage.ad_id, AdImage.url, AdImage.sort_order, AdImage.created_at]
@@ -538,11 +643,15 @@ class AdImageAdmin(ModelView, model=AdImage):
     can_delete = True
 
 
+# Apply labels
+add_ad_media_labels(AdImageAdmin, AdImage)
+
+
 class AdVideoAdmin(ModelView, model=AdVideo):
     """Admin view for ad videos."""
     
-    name = "Ad Video"
-    name_plural = "Ad Videos"
+    name = "Listing Video"
+    name_plural = "Listing Videos"
     icon = "fa-solid fa-video"
     
     column_list = [AdVideo.id, AdVideo.ad_id, AdVideo.url, AdVideo.created_at]
@@ -553,13 +662,17 @@ class AdVideoAdmin(ModelView, model=AdVideo):
     can_delete = True
 
 
+# Apply labels
+add_ad_media_labels(AdVideoAdmin, AdVideo)
+
+
 # ============ Chat ============
 
 class DialogAdmin(ModelView, model=Dialog):
     """Admin view for dialogs."""
     
-    name = "Dialog"
-    name_plural = "Dialogs"
+    name = "Chat Conversation"
+    name_plural = "Chat Conversations"
     icon = "fa-solid fa-comments"
     
     column_list = [
@@ -574,11 +687,15 @@ class DialogAdmin(ModelView, model=Dialog):
     can_delete = True
 
 
+# Apply labels
+add_chat_labels(DialogAdmin, Dialog)
+
+
 class MessageAdmin(ModelView, model=Message):
     """Admin view for messages."""
     
-    name = "Message"
-    name_plural = "Messages"
+    name = "Chat Message"
+    name_plural = "Chat Messages"
     icon = "fa-solid fa-message"
     
     column_list = [
@@ -599,13 +716,17 @@ class MessageAdmin(ModelView, model=Message):
     can_delete = True
 
 
+# Apply labels
+add_chat_labels(MessageAdmin, Message)
+
+
 # ============ Moderation ============
 
 class ReportAdmin(ModelView, model=Report):
     """Admin view for reports."""
     
-    name = "Report"
-    name_plural = "Reports"
+    name = "User Report"
+    name_plural = "User Reports"
     icon = "fa-solid fa-flag"
     
     column_list = [
@@ -628,11 +749,15 @@ class ReportAdmin(ModelView, model=Report):
     can_delete = True
 
 
+# Apply labels
+add_moderation_labels(ReportAdmin, Report)
+
+
 class ModerationLogAdmin(ModelView, model=ModerationLog):
     """Admin view for moderation logs (System Activity Logs)."""
     
-    name = "System Log"
-    name_plural = "System Logs & Activity"
+    name = "Activity Log"
+    name_plural = "Activity Logs"
     icon = "fa-solid fa-clipboard-list"
     
     column_list = [
@@ -651,19 +776,14 @@ class ModerationLogAdmin(ModelView, model=ModerationLog):
         ModerationLog.details, ModerationLog.report_id, ModerationLog.created_at
     ]
     
-    # Labels to make it clearer
-    column_labels = {
-        ModerationLog.moderator_id: "Admin/Moderator",
-        ModerationLog.action: "Action Type",
-        ModerationLog.target_type: "Target",
-        ModerationLog.target_id: "Target ID",
-        ModerationLog.created_at: "Timestamp",
-    }
-    
     can_create = False
     can_edit = False
     can_delete = False
     can_view_details = True
+
+
+# Apply labels
+add_moderation_labels(ModerationLogAdmin, ModerationLog)
 
 
 # ============ Banners ============
@@ -671,8 +791,8 @@ class ModerationLogAdmin(ModelView, model=ModerationLog):
 class BannerAdmin(ModelView, model=Banner):
     """Admin view for banners."""
     
-    name = "Banner"
-    name_plural = "Banners"
+    name = "Promotional Banner"
+    name_plural = "Promotional Banners"
     icon = "fa-solid fa-rectangle-ad"
     
     column_list = [
@@ -704,6 +824,10 @@ class BannerAdmin(ModelView, model=Banner):
     can_edit = True
     can_delete = True
     can_view_details = True
+
+
+# Apply labels
+add_banner_labels(BannerAdmin)
 
 
 # ============ Initialize Admin ============

@@ -1,0 +1,63 @@
+# Railway ignore file - files to exclude from deployment
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+server.log
+logs/
+
+# Environment files (Railway uses its own env vars)
+.env
+.env.local
+.env.*.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Static uploads (will be handled by Railway volume if needed)
+app/static/uploads/
+

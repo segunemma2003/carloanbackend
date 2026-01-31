@@ -3,6 +3,7 @@ Application configuration using Pydantic Settings.
 Loads configuration from environment variables and .env file.
 """
 
+import os
 from functools import lru_cache
 from typing import List, Optional
 
@@ -29,7 +30,7 @@ class Settings(BaseSettings):
 
     # Server
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = int(os.getenv("PORT", "8000"))  # Railway sets PORT env var
     WORKERS: int = 4
 
     # Database

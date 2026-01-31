@@ -28,29 +28,45 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
                     
                     html = body.decode("utf-8")
                     
+                    # Don't inject dashboard here - it has its own route at /dashboard-admin
+                    # Only inject CSS and JS to customize the appearance
+                    
                     # Inject CSS before </head>
                     css_injection = """
                     <link rel="stylesheet" href="/static/admin-custom.css">
                     <style>
-                        /* Force logo display */
+                        /* Sidebar - Better colors for logo visibility */
+                        .sidebar {
+                            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%) !important;
+                            border-right: 1px solid #E5E7EB !important;
+                        }
+                        .sidebar-header {
+                            background: white !important;
+                            padding: 20px 15px !important;
+                            border-bottom: 2px solid #5B87F5 !important;
+                            margin-bottom: 10px;
+                        }
+                        /* Force logo display with better contrast - no duplicate */
+                        .navbar-brand {
+                            display: flex !important;
+                            align-items: center !important;
+                            gap: 12px;
+                            padding: 10px 15px !important;
+                            background: white !important;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                            margin: 10px !important;
+                        }
                         .navbar-brand::before {
-                            content: "";
-                            display: inline-block;
-                            width: 50px;
-                            height: 50px;
-                            background-image: url('/static/logo.png');
-                            background-size: contain;
-                            background-repeat: no-repeat;
-                            background-position: center;
-                            margin-right: 10px;
-                            vertical-align: middle;
+                            display: none !important;
                         }
                         .navbar-brand img {
                             display: inline-block !important;
                             visibility: visible !important;
                             opacity: 1 !important;
-                            max-height: 50px;
+                            max-height: 45px;
                             width: auto;
+                            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
                         }
                         /* Brand colors - Primary Blue #5B87F5 */
                         :root {
@@ -79,10 +95,24 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
                         .login-container, .card {
                             border-top: 3px solid var(--primary-blue) !important;
                         }
-                        /* Active nav links */
+                        /* Sidebar navigation links - better styling */
+                        .sidebar .nav-link {
+                            color: #374151 !important;
+                            padding: 12px 20px !important;
+                            border-radius: 6px;
+                            margin: 4px 10px;
+                            transition: all 0.2s ease;
+                        }
+                        .sidebar .nav-link:hover {
+                            background-color: #f3f4f6 !important;
+                            color: var(--primary-blue) !important;
+                            transform: translateX(2px);
+                        }
                         .sidebar .nav-link.active {
-                            background-color: var(--primary-blue) !important;
+                            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-hover) 100%) !important;
                             color: white !important;
+                            box-shadow: 0 2px 8px rgba(91, 135, 245, 0.3);
+                            font-weight: 600;
                         }
                     </style>
                     """
@@ -90,6 +120,27 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
                     # Inject JS before </body>
                     js_injection = """
                     <script src="/static/admin-upload.js" defer></script>
+                    <script>
+                        // Add Dashboard link to admin navigation (don't auto-redirect)
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Add Dashboard link to admin navigation
+                            const sidebar = document.querySelector('.sidebar');
+                            if (sidebar) {
+                                // Check if dashboard link already exists
+                                const existingLink = sidebar.querySelector('a[href="/dashboard-admin"]');
+                                if (!existingLink) {
+                                    const dashboardLink = document.createElement('a');
+                                    dashboardLink.href = '/dashboard-admin';
+                                    dashboardLink.className = 'nav-link';
+                                    dashboardLink.innerHTML = '<i class="fa-solid fa-chart-line"></i> Dashboard';
+                                    const firstNavItem = sidebar.querySelector('.nav-link');
+                                    if (firstNavItem && firstNavItem.parentElement) {
+                                        firstNavItem.parentElement.insertBefore(dashboardLink, firstNavItem);
+                                    }
+                                }
+                            }
+                        });
+                    </script>
                     """
                     
                     # Inject into HTML

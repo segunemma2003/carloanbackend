@@ -43,13 +43,26 @@ async function loadStats() {
         loadingEl.style.display = 'block';
         contentEl.style.display = 'none';
         
-        // Fetch data
-        const response = await fetch(API_BASE);
+        // Fetch data with credentials
+        const response = await fetch(API_BASE, {
+            method: 'GET',
+            credentials: 'include', // Include cookies for authentication
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
         if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                // Not authenticated, redirect to login
+                window.location.href = '/admin/login';
+                return;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('Dashboard stats loaded:', data);
         
         // Hide loading, show content
         loadingEl.style.display = 'none';
@@ -82,7 +95,7 @@ function updateStats(data) {
     animateStatValue('.card-ads .stat-value', data.ads.total);
     animateStatValue('.card-active-ads .stat-value', data.ads.active);
     animateStatValue('.card-pending .stat-value', data.ads.pending);
-    animateStatValue('.card-messages .stat-value', data.chat.messages);
+    animateStatValue('.card-messages .stat-value', data.chat.messages || 0);
     animateStatValue('.card-reports .stat-value', data.moderation.total_reports);
     
     // Secondary stats

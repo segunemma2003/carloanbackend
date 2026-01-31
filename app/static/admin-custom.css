@@ -78,28 +78,38 @@ a:hover {
     border-color: var(--primary-blue);
 }
 
-/* Logo styling - Force logo to display */
+/* Sidebar styling - Better colors for logo visibility */
+.sidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border-right: 1px solid var(--border-gray) !important;
+}
+
+.sidebar-header {
+    background: white !important;
+    padding: 20px 15px !important;
+    border-bottom: 2px solid var(--primary-blue) !important;
+    margin-bottom: 10px;
+}
+
+/* Logo styling - Force logo to display with better contrast */
 .navbar-brand {
     display: flex !important;
     align-items: center !important;
-    gap: 10px;
+    gap: 12px;
+    padding: 10px 15px !important;
+    background: white !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin: 10px !important;
 }
 
-/* Inject logo using ::before if img tag doesn't work */
+/* Logo image - only show img, not ::before to avoid duplicates */
 .navbar-brand::before {
-    content: "";
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    background-image: url('/static/logo.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    flex-shrink: 0;
+    display: none !important;
 }
 
 .navbar-brand img {
-    max-height: 50px !important;
+    max-height: 45px !important;
     width: auto !important;
     height: auto !important;
     display: inline-block !important;
@@ -107,14 +117,39 @@ a:hover {
     opacity: 1 !important;
     margin-right: 10px;
     flex-shrink: 0;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* Ensure logo is visible in admin header */
+/* Ensure logo is visible in admin header and sidebar */
 .navbar .navbar-brand img,
-.navbar .navbar-brand::before {
+.navbar .navbar-brand::before,
+.sidebar .navbar-brand img,
+.sidebar .navbar-brand::before {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
+}
+
+/* Sidebar navigation links - better styling */
+.sidebar .nav-link {
+    color: #374151 !important;
+    padding: 12px 20px !important;
+    border-radius: 6px;
+    margin: 4px 10px;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #f3f4f6 !important;
+    color: var(--primary-blue) !important;
+    transform: translateX(2px);
+}
+
+.sidebar .nav-link.active {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-hover) 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(91, 135, 245, 0.3);
+    font-weight: 600;
 }
 
 /* Table styling */

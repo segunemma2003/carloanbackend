@@ -63,24 +63,27 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware (add first so it executes last)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Session middleware (required for admin authentication)
-# Important: Add AFTER CORS so sessions work properly
+# Session middleware (MUST be added before CORS for cookies to work)
+# SQLAdmin's AuthenticationBackend also creates SessionMiddleware, but we need
+# to add it here so our custom routes can access the session too
+# Use the same secret_key that SQLAdmin uses
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SECRET_KEY,
-    session_cookie="avto_laif_session",
+    # Use default cookie name "session" to match SQLAdmin's default
     max_age=14 * 24 * 60 * 60,  # 14 days
     same_site="lax",
     https_only=False,  # Set to True in production with HTTPS
+)
+
+# CORS middleware (add after session middleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,  # Required for cookies to work
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],  # Expose all headers including Set-Cookie
 )
 
 # Admin customization middleware (inject CSS/JS into admin pages)
@@ -107,7 +110,136 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR.absolute())), name="st
 upload_dir = STATIC_DIR / "uploads"
 upload_dir.mkdir(parents=True, exist_ok=True)
 
-# Initialize Admin Panel (after static files are mounted)
+# IMPORTANT: Register dashboard route BEFORE admin panel initialization
+# Use /dashboard-admin to avoid SQLAdmin interception
+@app.get("/dashboard-admin", response_class=HTMLResponse)
+async def admin_dashboard(request: Request):
+    """Serve the admin dashboard page."""
+    from starlette.responses import RedirectResponse
+    
+    # Use SQLAdmin's authentication check instead of manual session check
+    # Import the admin instance to check authentication
+    from app.admin import create_admin
+    # Get the admin instance (it's created in main.py)
+    # Actually, we need to check if user can access admin panel
+    # Let's use the same session check but with better error handling
+    
+    try:
+        # Check if user is authenticated via session (same way SQLAdmin does)
+        user_id = request.session.get("user_id")
+        
+        if not user_id:
+            # Not authenticated, redirect to login
+            return RedirectResponse(url="/admin/login", status_code=302)
+        
+        # Verify user exists and is admin (same check as AdminAuth.authenticate)
+        from sqlalchemy import select
+        from app.core.database import async_session_maker
+        from app.models.user import User, UserRole
+        
+        async with async_session_maker() as session:
+            result = await session.execute(
+                select(User).where(User.id == user_id)
+            )
+            user = result.scalar_one_or_none()
+            
+            if not user or user.role != UserRole.ADMIN or not user.is_active:
+                return RedirectResponse(url="/admin/login", status_code=302)
+    except Exception as e:
+        print(f"[DASHBOARD] Error checking authentication: {e}")
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    # Load dashboard HTML
+    dashboard_path = STATIC_DIR.parent / "templates" / "admin" / "dashboard.html"
+    
+    if dashboard_path.exists():
+        with open(dashboard_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        
+        # Inject dashboard CSS and JS
+        dashboard_css = '<link rel="stylesheet" href="/static/admin-dashboard.css">'
+        dashboard_js = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><script src="/static/admin-dashboard.js"></script>'
+        
+        # Inject before </head> and </body>
+        if "</head>" in html_content:
+            html_content = html_content.replace("</head>", dashboard_css + "</head>")
+        if "</body>" in html_content:
+            html_content = html_content.replace("</body>", dashboard_js + "</body>")
+        
+        return HTMLResponse(content=html_content)
+    else:
+        return HTMLResponse(
+            content="<h1>Dashboard not found</h1>",
+            status_code=404
+        )
+
+
+# Also add route at /admin/dashboard for sidebar compatibility
+@app.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard_alias(request: Request):
+    """Alias route for /admin/dashboard that redirects to /dashboard-admin."""
+    from starlette.responses import RedirectResponse
+    return RedirectResponse(url="/dashboard-admin", status_code=302)
+    """Serve the admin dashboard page."""
+    from starlette.responses import RedirectResponse
+    
+    # Use SQLAdmin's authentication check instead of manual session check
+    # Import the admin instance to check authentication
+    from app.admin import create_admin
+    # Get the admin instance (it's created in main.py)
+    # Actually, we need to check if user can access admin panel
+    # Let's use the same session check but with better error handling
+    
+    try:
+        # Check if user is authenticated via session (same way SQLAdmin does)
+        user_id = request.session.get("user_id")
+        
+        if not user_id:
+            # Not authenticated, redirect to login
+            return RedirectResponse(url="/admin/login", status_code=302)
+        
+        # Verify user exists and is admin (same check as AdminAuth.authenticate)
+        from sqlalchemy import select
+        from app.core.database import async_session_maker
+        from app.models.user import User, UserRole
+        
+        async with async_session_maker() as session:
+            result = await session.execute(
+                select(User).where(User.id == user_id)
+            )
+            user = result.scalar_one_or_none()
+            
+            if not user or user.role != UserRole.ADMIN or not user.is_active:
+                return RedirectResponse(url="/admin/login", status_code=302)
+    except Exception as e:
+        print(f"[DASHBOARD] Error checking authentication: {e}")
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    # Load dashboard HTML
+    dashboard_path = STATIC_DIR.parent / "templates" / "admin" / "dashboard.html"
+    
+    if dashboard_path.exists():
+        with open(dashboard_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        
+        # Inject dashboard CSS and JS
+        dashboard_css = '<link rel="stylesheet" href="/static/admin-dashboard.css">'
+        dashboard_js = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><script src="/static/admin-dashboard.js"></script>'
+        
+        # Inject before </head> and </body>
+        if "</head>" in html_content:
+            html_content = html_content.replace("</head>", dashboard_css + "</head>")
+        if "</body>" in html_content:
+            html_content = html_content.replace("</body>", dashboard_js + "</body>")
+        
+        return HTMLResponse(content=html_content)
+    else:
+        return HTMLResponse(
+            content="<h1>Dashboard not found</h1>",
+            status_code=404
+        )
+
+# Initialize Admin Panel (after static files and dashboard route are mounted)
 admin = create_admin(app)
 
 
@@ -175,20 +307,10 @@ async def test_logo():
     return {"error": "Logo not found"}
 
 
-# Admin Dashboard endpoint
-@app.get("/admin/dashboard", response_class=HTMLResponse)
-async def admin_dashboard(request: Request):
-    """Serve the admin dashboard page."""
-    dashboard_path = STATIC_DIR.parent / "templates" / "admin" / "dashboard.html"
-    
-    if dashboard_path.exists():
-        with open(dashboard_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    else:
-        return HTMLResponse(
-            content="<h1>Dashboard not found</h1>",
-            status_code=404
-        )
+# Note: /admin is handled by SQLAdmin, so we can't override it directly
+# Instead, we'll inject dashboard content via middleware when accessing /admin
+
+
 
 
 # Root endpoint
