@@ -9,7 +9,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
 from app.core.database import init_db, close_db, get_db
@@ -17,6 +19,7 @@ from app.core.redis import RedisClient
 from app.core.exceptions import AppException
 from app.api.v1 import api_router
 from app.services.websocket import manager, authenticate_websocket, handle_websocket_message
+from app.admin import create_admin
 
 
 @asynccontextmanager
@@ -59,7 +62,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware (add first so it executes last)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -67,6 +70,34 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Session middleware (required for admin authentication)
+# Important: Add AFTER CORS so sessions work properly
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie="avto_laif_session",
+    max_age=14 * 24 * 60 * 60,  # 14 days
+    same_site="lax",
+    https_only=False,  # Set to True in production with HTTPS
+)
+
+# Admin customization middleware (inject CSS/JS into admin pages)
+from app.middleware.admin_custom import AdminCustomMiddleware
+app.add_middleware(AdminCustomMiddleware)
+
+# Mount static files FIRST (before admin panel)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Create uploads directory
+import os
+from pathlib import Path
+upload_dir = Path("app/static/uploads")
+upload_dir.mkdir(parents=True, exist_ok=True)
+
+# Initialize Admin Panel (after static files are mounted)
+admin = create_admin(app)
+
 
 
 # Exception handlers
@@ -119,6 +150,17 @@ async def health_check():
         "app": settings.APP_NAME,
     }
 
+
+# Test logo endpoint
+@app.get("/test-logo")
+async def test_logo():
+    """Test if logo is accessible."""
+    from fastapi.responses import FileResponse
+    from pathlib import Path
+    logo_path = Path("app/static/logo.png")
+    if logo_path.exists():
+        return FileResponse(logo_path)
+    return {"error": "Logo not found"}
 
 # Root endpoint
 @app.get("/")

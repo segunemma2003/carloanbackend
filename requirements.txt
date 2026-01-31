@@ -1,65 +1,71 @@
-# AVTO LAIF Backend - Dependencies
+# AVTO LAIF Backend - Dependencies (Latest Versions - 2026)
+
 # FastAPI and server
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-python-multipart==0.0.18
+fastapi==0.115.6  # Latest stable
+uvicorn[standard]==0.34.0  # Latest stable
+python-multipart==0.0.18  # Latest
 
 # Database
-sqlalchemy==2.0.36
-asyncpg==0.30.0
-alembic==1.14.0
-greenlet==3.1.1
+sqlalchemy==2.0.36  # Latest 2.0 stable
+asyncpg==0.30.0  # Latest stable
+alembic==1.14.0  # Latest stable
+greenlet==3.1.1  # Latest
 
 # Redis for caching and sessions
-redis==5.2.1
+redis==5.2.1  # Latest stable
 
 # Authentication
-pyjwt==2.10.1
-passlib[bcrypt]==1.7.4
-python-jose[cryptography]==3.3.0
+pyjwt==2.10.1  # Latest stable
+passlib[bcrypt]==1.7.4  # Latest stable
+python-jose[cryptography]==3.3.0  # Latest stable
+bcrypt==5.0.0  # Latest (explicit for passlib)
 
 # Validation and serialization
-pydantic==2.10.4
-pydantic-settings==2.7.0
-email-validator==2.2.0
-phonenumbers==8.13.52
+pydantic==2.10.4  # Latest 2.x
+pydantic-settings==2.7.0  # Latest
+email-validator==2.2.0  # Latest
+phonenumbers==8.13.52  # Latest
 
 # WebSocket
-websockets==14.1
+websockets==14.1  # Latest stable
 
 # Async HTTP client
-httpx==0.28.1
-aiohttp==3.11.11
+httpx==0.28.1  # Latest stable
+aiohttp==3.11.11  # Latest stable
 
 # File handling
-python-magic==0.4.27
-pillow==11.1.0
-aiofiles==24.1.0
+python-magic==0.4.27  # Latest
+pillow==11.1.0  # Latest stable
+aiofiles==24.1.0  # Latest
+
+# Admin Panel
+sqladmin==0.20.0  # Latest stable
+jinja2==3.1.4  # Latest stable
+itsdangerous==2.2.0  # Latest
 
 # Geolocation
-geopy==2.4.1
+geopy==2.4.1  # Latest
 
 # Background tasks
-celery==5.4.0
-arq==0.26.1
+celery==5.4.0  # Latest stable
+arq==0.26.1  # Latest
 
 # Utilities
-python-dotenv==1.0.1
-orjson==3.10.13
-pendulum==3.0.0
+python-dotenv==1.0.1  # Latest
+orjson==3.10.13  # Latest (fastest JSON)
+pendulum==3.0.0  # Latest (better datetime)
 
 # Logging and monitoring
-structlog==24.4.0
-sentry-sdk[fastapi]==2.19.2
+structlog==24.4.0  # Latest
+sentry-sdk[fastapi]==2.19.2  # Latest
 
 # Testing
-pytest==8.3.4
-pytest-asyncio==0.25.2
-httpx==0.28.1
-factory-boy==3.3.1
+pytest==8.3.4  # Latest stable
+pytest-asyncio==0.25.2  # Latest
+factory-boy==3.3.1  # Latest
 
 # Code quality
-black==24.10.0
-ruff==0.8.6
-mypy==1.14.1
+black==24.10.0  # Latest formatter
+ruff==0.8.6  # Latest linter (faster than flake8)
+mypy==1.14.1  # Latest type checker
 

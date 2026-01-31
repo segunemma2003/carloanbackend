@@ -55,7 +55,9 @@ class Settings(BaseSettings):
     COOKIE_DOMAIN: Optional[str] = None
 
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    # Use ["*"] to allow all origins (development only)
+    # In production, specify exact origins: ["https://avtolaif.ru", "https://www.avtolaif.ru"]
+    CORS_ORIGINS: List[str] = ["*"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

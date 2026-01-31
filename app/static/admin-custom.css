@@ -1,0 +1,172 @@
+/* MillionAvto Admin Panel Custom Styles */
+
+:root {
+    --primary-blue: #5B87F5;
+    --primary-blue-hover: #4472E4;
+    --primary-blue-dark: #3563D3;
+    --red-cta: #DC2626;
+    --red-cta-hover: #B91C1C;
+    --success-green: #10B981;
+    --success-green-hover: #059669;
+    --dark-bg: #1F2937;
+    --text-dark: #111827;
+    --text-light: #6B7280;
+    --border-gray: #E5E7EB;
+    --bg-light: #F9FAFB;
+}
+
+/* Override primary color */
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-blue) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-hover) !important;
+    border-color: var(--primary-blue-hover) !important;
+}
+
+.btn-danger {
+    background-color: var(--red-cta) !important;
+    border-color: var(--red-cta) !important;
+}
+
+.btn-danger:hover {
+    background-color: var(--red-cta-hover) !important;
+    border-color: var(--red-cta-hover) !important;
+}
+
+.btn-success {
+    background-color: var(--success-green) !important;
+    border-color: var(--success-green) !important;
+}
+
+.btn-success:hover {
+    background-color: var(--success-green-hover) !important;
+    border-color: var(--success-green-hover) !important;
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--primary-blue) !important;
+    color: white !important;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--bg-light);
+    color: var(--primary-blue) !important;
+}
+
+a {
+    color: var(--primary-blue);
+}
+
+a:hover {
+    color: var(--primary-blue-hover);
+}
+
+.pagination .page-link {
+    color: var(--primary-blue);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+/* Logo styling - Force logo to display */
+.navbar-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px;
+}
+
+/* Inject logo using ::before if img tag doesn't work */
+.navbar-brand::before {
+    content: "";
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    background-image: url('/static/logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.navbar-brand img {
+    max-height: 50px !important;
+    width: auto !important;
+    height: auto !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+/* Ensure logo is visible in admin header */
+.navbar .navbar-brand img,
+.navbar .navbar-brand::before {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Table styling */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bg-light);
+}
+
+/* Card styling */
+.card {
+    border-color: var(--border-gray);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--bg-light);
+    border-bottom-color: var(--border-gray);
+    font-weight: 600;
+}
+
+/* Form styling */
+.form-control:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(91, 135, 245, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(91, 135, 245, 0.25);
+}
+
+/* Badge styling */
+.badge-primary {
+    background-color: var(--primary-blue);
+}
+
+.badge-success {
+    background-color: var(--success-green);
+}
+
+.badge-danger {
+    background-color: var(--red-cta);
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-brand img {
+        max-height: 30px;
+    }
+}
+
