@@ -73,18 +73,20 @@ app = FastAPI(
 # Add middleware to ensure static files are accessible (must be before other middleware)
 @app.middleware("http")
 async def add_cors_headers_for_statics(request: Request, call_next):
-    """Add CORS headers for static file requests."""
+    """Add CORS headers for all requests - no restrictions."""
     response = await call_next(request)
     
-    # Add CORS headers for SQLAdmin static files and our static files
-    if request.url.path.startswith("/admin/statics") or request.url.path.startswith("/static"):
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Expose-Headers"] = "*"
-        # Cache static files
-        if request.method == "GET":
-            response.headers["Cache-Control"] = "public, max-age=31536000"
+    # Add CORS headers for ALL requests - allow everything
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Expose-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    
+    # Cache static files
+    if (request.url.path.startswith("/admin/statics") or 
+        request.url.path.startswith("/static")) and request.method == "GET":
+        response.headers["Cache-Control"] = "public, max-age=31536000"
     
     return response
 
@@ -102,28 +104,15 @@ app.add_middleware(
 )
 
 # CORS middleware (add after session middleware)
-# Allow all origins for development/production
-# SQLAdmin's static files need to be accessible
-cors_origins = settings.CORS_ORIGINS
-if cors_origins == ["*"]:
-    # For "*", we need to handle it specially - allow all origins
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=r".*",  # Allow all origins via regex
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
-    )
+# Allow ALL origins with NO restrictions
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r".*",  # Allow all origins - no restrictions
+    allow_credentials=True,  # Allow cookies and credentials
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+    expose_headers=["*"],  # Expose all headers
+)
 
 # Admin customization middleware (inject CSS/JS into admin pages)
 from app.middleware.admin_custom import AdminCustomMiddleware
