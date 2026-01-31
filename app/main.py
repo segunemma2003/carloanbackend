@@ -70,6 +70,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Add middleware to ensure static files are accessible (must be before other middleware)
+@app.middleware("http")
+async def add_cors_headers_for_statics(request: Request, call_next):
+    """Add CORS headers for static file requests."""
+    response = await call_next(request)
+    
+    # Add CORS headers for SQLAdmin static files and our static files
+    if request.url.path.startswith("/admin/statics") or request.url.path.startswith("/static"):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+        # Cache static files
+        if request.method == "GET":
+            response.headers["Cache-Control"] = "public, max-age=31536000"
+    
+    return response
+
 # Session middleware (MUST be added before CORS for cookies to work)
 # SQLAdmin's AuthenticationBackend also creates SessionMiddleware, but we need
 # to add it here so our custom routes can access the session too
