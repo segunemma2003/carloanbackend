@@ -126,6 +126,7 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
                     """
                     
                     # Inject JS before </body>
+                    # Use HTTPS for all external resources
                     js_injection = """
                     <script src="/static/admin-upload.js" defer></script>
                     <script>
@@ -147,6 +148,26 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
                                     }
                                 }
                             }
+                            
+                            // Fix form labels - add labels to inputs without labels
+                            document.querySelectorAll('input, select, textarea').forEach(function(input) {
+                                if (!input.id) {
+                                    // Generate ID if missing
+                                    input.id = 'input-' + Math.random().toString(36).substr(2, 9);
+                                }
+                                const label = input.closest('.form-group')?.querySelector('label[for="' + input.id + '"]');
+                                if (!label && input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
+                                    // Create label if missing
+                                    const formGroup = input.closest('.form-group') || input.parentElement;
+                                    if (formGroup && !formGroup.querySelector('label')) {
+                                        const newLabel = document.createElement('label');
+                                        newLabel.setAttribute('for', input.id);
+                                        newLabel.className = 'form-label';
+                                        newLabel.textContent = input.name || input.placeholder || 'Field';
+                                        formGroup.insertBefore(newLabel, input);
+                                    }
+                                }
+                            });
                         });
                     </script>
                     """

@@ -83,6 +83,25 @@ async def add_cors_headers_for_statics(request: Request, call_next):
     response.headers["Access-Control-Expose-Headers"] = "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
     
+    # Add Content Security Policy that allows eval (for Chart.js and other libraries)
+    # This is needed for some JavaScript libraries that use eval
+    csp = (
+        "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com *; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com *; "
+        "img-src 'self' data: blob: https: http: *; "
+        "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com *; "
+        "connect-src 'self' https: http: *; "
+        "frame-src 'self' *; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self' *;"
+    )
+    response.headers["Content-Security-Policy"] = csp
+    
+    # Upgrade insecure requests to HTTPS
+    response.headers["Upgrade-Insecure-Requests"] = "1"
+    
     # Cache static files
     if (request.url.path.startswith("/admin/statics") or 
         request.url.path.startswith("/static")) and request.method == "GET":
@@ -197,9 +216,9 @@ async def admin_dashboard(request: Request):
         with open(dashboard_path, "r", encoding="utf-8") as f:
             html_content = f.read()
         
-        # Inject dashboard CSS and JS
+        # Inject dashboard CSS and JS (use HTTPS for CDN)
         dashboard_css = '<link rel="stylesheet" href="/static/admin-dashboard.css">'
-        dashboard_js = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><script src="/static/admin-dashboard.js"></script>'
+        dashboard_js = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-6+U2VzRrJZCyPjkj7y0xvw0X1B3L3d6j3eFzN3z3n3czypcd47F3fP9pNfqJgZT" crossorigin="anonymous"></script><script src="/static/admin-dashboard.js"></script>'
         
         # Inject before </head> and </body>
         if "</head>" in html_content:
@@ -263,9 +282,9 @@ async def admin_dashboard_alias(request: Request):
         with open(dashboard_path, "r", encoding="utf-8") as f:
             html_content = f.read()
         
-        # Inject dashboard CSS and JS
+        # Inject dashboard CSS and JS (use HTTPS for CDN)
         dashboard_css = '<link rel="stylesheet" href="/static/admin-dashboard.css">'
-        dashboard_js = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><script src="/static/admin-dashboard.js"></script>'
+        dashboard_js = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-6+U2VzRrJZCyPjkj7y0xvw0X1B3L3d6j3eFzN3z3n3czypcd47F3fP9pNfqJgZT" crossorigin="anonymous"></script><script src="/static/admin-dashboard.js"></script>'
         
         # Inject before </head> and </body>
         if "</head>" in html_content:
