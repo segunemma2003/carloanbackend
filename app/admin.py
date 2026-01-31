@@ -93,8 +93,8 @@ class AdminAuth(AuthenticationBackend):
 class UserAdmin(ModelView, model=User):
     """Admin view for users."""
     
-    name = "User"
-    name_plural = "Users"
+    name = "User Account"
+    name_plural = "User Accounts"
     icon = "fa-solid fa-users"
     
     # List view
@@ -148,8 +148,8 @@ class UserAdmin(ModelView, model=User):
 class UserSessionAdmin(ModelView, model=UserSession):
     """Admin view for user sessions."""
     
-    name = "Session"
-    name_plural = "Sessions"
+    name = "User Session"
+    name_plural = "Active Sessions"
     icon = "fa-solid fa-key"
     
     column_list = [
@@ -171,7 +171,7 @@ class CategoryAdmin(ModelView, model=Category):
     """Admin view for categories."""
     
     name = "Category"
-    name_plural = "Categories"
+    name_plural = "Product Categories"
     icon = "fa-solid fa-tags"
     
     column_list = [
@@ -207,7 +207,7 @@ class VehicleTypeAdmin(ModelView, model=VehicleType):
     """Admin view for vehicle types."""
     
     name = "Vehicle Type"
-    name_plural = "Vehicle Types"
+    name_plural = "Vehicle Categories"
     icon = "fa-solid fa-car"
     
     column_list = [VehicleType.id, VehicleType.name, VehicleType.slug, VehicleType.is_active, VehicleType.sort_order]
@@ -224,8 +224,8 @@ class VehicleTypeAdmin(ModelView, model=VehicleType):
 class BrandAdmin(ModelView, model=Brand):
     """Admin view for brands."""
     
-    name = "Brand"
-    name_plural = "Brands"
+    name = "Car Brand"
+    name_plural = "Car Brands"
     icon = "fa-solid fa-award"
     
     column_list = [

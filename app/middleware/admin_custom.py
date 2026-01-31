@@ -108,10 +108,15 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
                     else:
                         html = html + js_injection
                     
+                    # Create new headers without Content-Length (let FastAPI calculate it)
+                    new_headers = dict(response.headers)
+                    new_headers.pop("content-length", None)
+                    new_headers.pop("Content-Length", None)
+                    
                     return HTMLResponse(
                         content=html,
                         status_code=response.status_code,
-                        headers=dict(response.headers)
+                        headers=new_headers
                     )
                 except Exception as e:
                     # If injection fails, return original response
