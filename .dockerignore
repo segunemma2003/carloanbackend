@@ -53,6 +53,9 @@ temp/
 *.md
 !README.md
 
+# Keep entrypoint script
+!entrypoint.sh
+
 # Railway specific
 .railwayignore
 

@@ -25,6 +25,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
+# Copy and set permissions for entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Create directories for static files and uploads
 RUN mkdir -p app/static/uploads && \
     chmod -R 755 app/static
@@ -33,15 +37,16 @@ RUN mkdir -p app/static/uploads && \
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser $APP_HOME
 
+# Switch to non-root user
 USER appuser
 
 # Expose port (Railway will set PORT env var)
-EXPOSE $PORT
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Run the application (Railway sets PORT env var)
-CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Use entrypoint script to handle PORT variable
+ENTRYPOINT ["/entrypoint.sh"]
 
