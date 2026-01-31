@@ -23,8 +23,8 @@ class Settings(BaseSettings):
 
     # Application
     APP_NAME: str = "AVTO_LAIF"
-    APP_ENV: str = "development"
-    DEBUG: bool = True
+    APP_ENV: str = os.getenv("APP_ENV", "development")
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
     SECRET_KEY: str = "change-me-in-production"
     API_V1_PREFIX: str = "/api/v1"
 

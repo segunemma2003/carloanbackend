@@ -64,9 +64,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="AVTO LAIF - Car Marketplace API",
     version="1.0.0",
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
-    openapi_url="/openapi.json" if settings.DEBUG else None,
+    docs_url="/docs",  # Always enable docs for API testing
+    redoc_url="/redoc",  # Always enable ReDoc
+    openapi_url="/openapi.json",  # Always enable OpenAPI JSON
     lifespan=lifespan,
 )
 
