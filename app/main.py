@@ -32,9 +32,16 @@ async def lifespan(app: FastAPI):
     # Startup
     print("Starting AVTO LAIF Backend...")
     
-    # Initialize database
-    await init_db()
-    print("Database initialized")
+    # Initialize database with error handling
+    try:
+        await init_db()
+        print("Database initialized")
+    except Exception as e:
+        print(f"WARNING: Database initialization failed: {e}")
+        print("The application will start but database operations may fail.")
+        print("Please check your DATABASE_URL environment variable.")
+        # Don't raise - allow app to start even if DB is unavailable
+        # This helps with debugging deployment issues
     
     # Initialize Redis
     try:

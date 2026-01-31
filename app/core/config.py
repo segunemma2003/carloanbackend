@@ -34,7 +34,19 @@ class Settings(BaseSettings):
     WORKERS: int = 4
 
     # Database
+    # Railway provides DATABASE_URL automatically when PostgreSQL service is added
+    # Format: postgresql://user:password@host:port/dbname
+    # We need to convert it to postgresql+asyncpg:// for asyncpg
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/avto_laif"
+    
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def convert_database_url(cls, v: str) -> str:
+        """Convert Railway's postgresql:// URL to postgresql+asyncpg:// if needed."""
+        if isinstance(v, str) and v.startswith("postgresql://") and "+asyncpg" not in v:
+            # Railway provides postgresql://, but we need postgresql+asyncpg://
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_ECHO: bool = False
