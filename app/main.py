@@ -110,8 +110,21 @@ STATIC_DIR = BASE_DIR / "app" / "static"
 # Create static directory if it doesn't exist
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
+# Debug: Print static directory path
+print(f"[STATIC FILES] Static directory: {STATIC_DIR.absolute()}")
+print(f"[STATIC FILES] Static directory exists: {STATIC_DIR.exists()}")
+if STATIC_DIR.exists():
+    print(f"[STATIC FILES] Files in static dir: {list(STATIC_DIR.iterdir())}")
+
 # Mount static files with absolute path
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR.absolute())), name="static")
+# Use html=True to serve index.html for directories
+try:
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR.absolute()), html=True), name="static")
+    print(f"[STATIC FILES] Successfully mounted static files at /static")
+except Exception as e:
+    print(f"[STATIC FILES] ERROR mounting static files: {e}")
+    # Try to mount anyway with a fallback
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR.absolute())), name="static")
 
 # Create uploads directory
 upload_dir = STATIC_DIR / "uploads"

@@ -29,9 +29,12 @@ COPY . .
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Create directories for static files and uploads
+# Ensure static files directory exists and has correct permissions
 RUN mkdir -p app/static/uploads && \
-    chmod -R 755 app/static
+    chmod -R 755 app/static && \
+    chmod -R 755 app/templates && \
+    # Verify static files are present
+    ls -la app/static/ || echo "Warning: Static files directory may be empty"
 
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
