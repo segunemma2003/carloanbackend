@@ -15,6 +15,14 @@ class AdminCustomMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         
+        # Add CORS headers for static files (SQLAdmin's /admin/statics/*)
+        if request.url.path.startswith("/admin/statics") or request.url.path.startswith("/static"):
+            # Ensure static files have proper CORS headers
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Cache-Control"] = "public, max-age=31536000"
+        
         # Only modify admin panel pages (including login)
         if request.url.path.startswith("/admin"):
             # Check if response is HTML

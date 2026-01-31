@@ -84,14 +84,28 @@ app.add_middleware(
 )
 
 # CORS middleware (add after session middleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,  # Required for cookies to work
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],  # Expose all headers including Set-Cookie
-)
+# Allow all origins for development/production
+# SQLAdmin's static files need to be accessible
+cors_origins = settings.CORS_ORIGINS
+if cors_origins == ["*"]:
+    # For "*", we need to handle it specially - allow all origins
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r".*",  # Allow all origins via regex
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
 # Admin customization middleware (inject CSS/JS into admin pages)
 from app.middleware.admin_custom import AdminCustomMiddleware
