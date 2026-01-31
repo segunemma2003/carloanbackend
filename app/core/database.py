@@ -20,7 +20,15 @@ class Base(DeclarativeBase):
     pass
 
 
-# Create async engine
+# Create async engine (lazy initialization)
+# Validate DATABASE_URL is not empty
+if not settings.DATABASE_URL or settings.DATABASE_URL.strip() == "":
+    raise ValueError(
+        "DATABASE_URL environment variable is not set. "
+        "Please set DATABASE_URL in your Railway environment variables. "
+        "Add a PostgreSQL service in Railway and link it to your app."
+    )
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     pool_size=settings.DATABASE_POOL_SIZE,

@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     @classmethod
     def convert_database_url(cls, v: str) -> str:
         """Convert Railway's postgresql:// URL to postgresql+asyncpg:// if needed."""
+        if not v or v.strip() == "":
+            # If DATABASE_URL is empty, return default (for local development)
+            # In production, this should be set via environment variable
+            return "postgresql+asyncpg://postgres:password@localhost:5432/avto_laif"
+        
         if isinstance(v, str) and v.startswith("postgresql://") and "+asyncpg" not in v:
             # Railway provides postgresql://, but we need postgresql+asyncpg://
             return v.replace("postgresql://", "postgresql+asyncpg://", 1)
