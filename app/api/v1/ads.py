@@ -206,7 +206,7 @@ def apply_sorting(query, sort_by: str):
 async def list_ads(
     params: AdSearchParams = Depends(),
     db: AsyncSession = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: Optional[User] = Depends(get_current_user_optional),  # Optional - public endpoint
 ):
     """
     Search and list ads with filters.
@@ -290,7 +290,7 @@ async def list_ads(
 async def get_ad(
     ad_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: Optional[User] = Depends(get_current_user_optional),  # Optional - public endpoint
 ):
     """
     Get ad by ID with full details.
