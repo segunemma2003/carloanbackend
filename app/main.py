@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, HTMLResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
@@ -353,6 +354,42 @@ async def health_check():
         "version": "1.0.0",
         "app": settings.APP_NAME,
     }
+
+
+# Diagnostic endpoint
+@app.get("/diagnostic")
+async def diagnostic_check(db: AsyncSession = Depends(get_db)):
+    """Diagnostic endpoint - checks database and Redis connectivity."""
+    diagnostics = {
+        "status": "healthy",
+        "version": "1.0.0",
+        "app": settings.APP_NAME,
+        "database": "unknown",
+        "redis": "unknown",
+    }
+    
+    # Check database
+    try:
+        result = await db.execute(select(1))
+        result.scalar()
+        diagnostics["database"] = "connected"
+    except Exception as e:
+        diagnostics["database"] = f"error: {str(e)}"
+        diagnostics["status"] = "degraded"
+    
+    # Check Redis
+    try:
+        redis_client = await RedisClient.get_client()
+        if redis_client:
+            await redis_client.ping()
+            diagnostics["redis"] = "connected"
+        else:
+            diagnostics["redis"] = "not_configured"
+    except Exception as e:
+        diagnostics["redis"] = f"error: {str(e)}"
+        # Redis is optional, so don't mark as degraded
+    
+    return diagnostics
 
 
 # Test logo endpoint
